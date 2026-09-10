@@ -1,4 +1,3 @@
-```python
 import html
 from datetime import date, timedelta
 
