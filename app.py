@@ -286,10 +286,54 @@ if not st.session_state.session or not st.session_state.user:
                             st.session_state.login_mode = "Masuk"
                             st.rerun()
 
-                    except Exception:
-                        st.error(
-                            "Akun gagal dibuat. Email mungkin sudah terdaftar."
-                        )
+                    ```python
+                else:
+
+                    try:
+                        result = supabase.auth.sign_up({
+                            "email": email.strip(),
+                            "password": password
+                        })
+
+                        if result.session:
+
+                            st.session_state.session = result.session
+                            st.session_state.user = result.user
+                            st.session_state.page = "Beranda"
+
+                            st.rerun()
+
+                        else:
+
+                            st.success(
+                                "Pendaftaran berhasil. Silakan cek email untuk verifikasi, lalu masuk."
+                            )
+
+                            st.session_state.login_mode = "Masuk"
+
+                    except Exception as e:
+
+                        error_message = str(e)
+
+                        if "already registered" in error_message.lower():
+                            st.error(
+                                "Email ini sudah terdaftar. Silakan gunakan menu Masuk."
+                            )
+
+                        elif "email" in error_message.lower():
+                            st.error(
+                                f"Registrasi gagal karena masalah email: {error_message}"
+                            )
+
+                        elif "password" in error_message.lower():
+                            st.error(
+                                f"Registrasi gagal karena masalah password: {error_message}"
+                            )
+
+                        else:
+                            st.error(
+                                f"Registrasi gagal: {error_message}"
+                            )
 
         if st.button(
             "Sudah punya akun? Masuk",
