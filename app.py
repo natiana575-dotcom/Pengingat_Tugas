@@ -1,5 +1,6 @@
 import html
 from datetime import date, timedelta
+from textwrap import dedent
 
 import streamlit as st
 from supabase import create_client
@@ -212,7 +213,7 @@ if (
 ):
 
     st.markdown(
-        """
+        dedent("""
         <style>
 
         .stApp {
@@ -264,7 +265,7 @@ if (
         }
 
         </style>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
@@ -276,11 +277,11 @@ if (
     if st.session_state.login_mode == "Masuk":
 
         st.markdown(
-            """
+            dedent("""
             <div class="login-subtitle">
                 Masuk untuk menyimpan tugasmu.
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
@@ -365,11 +366,11 @@ if (
     else:
 
         st.markdown(
-            """
+            dedent("""
             <div class="login-subtitle">
                 Buat akun baru untuk mulai mencatat tugas.
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
@@ -487,7 +488,7 @@ pasang_access_token()
 
 
 st.markdown(
-    """
+    dedent("""
     <style>
 
     .stApp {
@@ -635,7 +636,7 @@ st.markdown(
     }
 
     </style>
-    """,
+    """),
     unsafe_allow_html=True
 )
 
@@ -730,7 +731,7 @@ if st.session_state.page == "Beranda":
     ]
 
     st.markdown(
-        f"""
+        dedent(f"""
         <div class="header-card">
             <div class="current-date">
                 {tanggal_indonesia(today, True)}
@@ -756,7 +757,7 @@ if st.session_state.page == "Beranda":
                 </span>
             </div>
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
@@ -928,13 +929,13 @@ if st.session_state.page == "Beranda":
     if not visible_tasks:
 
         st.markdown(
-            """
+            dedent("""
             <div class="empty-box">
                 Belum ada tugas.
                 <br>
                 Tekan tombol + untuk menambahkan tugas.
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
@@ -960,7 +961,7 @@ if st.session_state.page == "Beranda":
                 )
 
                 st.markdown(
-                    f"""
+                    dedent(f"""
                     <div class="task-card">
 
                         <div class="subject-text">
@@ -977,7 +978,7 @@ if st.session_state.page == "Beranda":
                         </div>
 
                     </div>
-                    """,
+                    """),
                     unsafe_allow_html=True
                 )
 
@@ -1062,12 +1063,12 @@ elif st.session_state.page == "Mata Pelajaran":
     )
 
     st.markdown(
-        """
+        dedent("""
         <div class="info-card">
             Tambahkan mata pelajaran yang kamu gunakan.
             Mata pelajaran akan muncul saat menambahkan tugas.
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
@@ -1142,11 +1143,11 @@ elif st.session_state.page == "Mata Pelajaran":
     if not subjects:
 
         st.markdown(
-            """
+            dedent("""
             <div class="empty-box">
                 Belum ada mata pelajaran.
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
@@ -1163,11 +1164,11 @@ elif st.session_state.page == "Mata Pelajaran":
                 )
 
                 st.markdown(
-                    f"""
+                    dedent(f"""
                     <div class="info-card">
                         <b>{subject_name_display}</b>
                     </div>
-                    """,
+                    """),
                     unsafe_allow_html=True
                 )
 
@@ -1266,14 +1267,14 @@ elif st.session_state.page == "Notifikasi":
             )
 
             st.markdown(
-                f"""
+                dedent(f"""
                 <div class="info-card">
                     <b>{task_name}</b>
                     <br>
                     Deadline:
                     {tanggal_indonesia(task["deadline"])}
                 </div>
-                """,
+                """),
                 unsafe_allow_html=True
             )
 
@@ -1291,25 +1292,25 @@ elif st.session_state.page == "Notifikasi":
             )
 
             st.markdown(
-                f"""
+                dedent(f"""
                 <div class="info-card">
                     <b>{task_name}</b>
                     <br>
                     Deadline:
                     {tanggal_indonesia(task["deadline"])}
                 </div>
-                """,
+                """),
                 unsafe_allow_html=True
             )
 
     if not overdue and not upcoming:
 
         st.markdown(
-            """
+            dedent("""
             <div class="empty-box">
                 Tidak ada notifikasi saat ini. ✨
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
@@ -1326,7 +1327,7 @@ elif st.session_state.page == "Akun":
     )
 
     st.markdown(
-        f"""
+        dedent(f"""
         <div class="info-card">
 
             <div style="
@@ -1348,12 +1349,12 @@ elif st.session_state.page == "Akun":
             </div>
 
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
     st.markdown(
-        f"""
+        dedent(f"""
         <div class="info-card">
 
             <div style="
@@ -1375,7 +1376,7 @@ elif st.session_state.page == "Akun":
             </div>
 
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
@@ -1395,7 +1396,7 @@ elif st.session_state.page == "Pengaturan":
     )
 
     st.markdown(
-        """
+        dedent("""
         <div class="info-card">
             <b>Tampilan</b>
             <br>
@@ -1409,7 +1410,7 @@ elif st.session_state.page == "Pengaturan":
             Tugas dan mata pelajaran tersimpan
             di Supabase berdasarkan akun pengguna.
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
