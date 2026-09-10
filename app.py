@@ -1,6 +1,10 @@
-import streamlit as st
+```python
+import html
 from datetime import date, timedelta
+
+import streamlit as st
 from supabase import create_client
+
 
 st.set_page_config(
     page_title="Pengingat Tugas",
@@ -8,6 +12,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -38,6 +43,9 @@ if "message" not in st.session_state:
 
 if "message_type" not in st.session_state:
     st.session_state.message_type = "info"
+
+if "task_filter" not in st.session_state:
+    st.session_state.task_filter = "Semua"
 
 
 hari = [
@@ -92,6 +100,19 @@ def set_message(message, message_type="info"):
     st.session_state.message_type = message_type
 
 
+def pasang_access_token():
+
+    session = st.session_state.session
+
+    if session is None:
+        return
+
+    try:
+        supabase.postgrest.auth(session.access_token)
+    except Exception:
+        pass
+
+
 def logout():
 
     try:
@@ -104,6 +125,7 @@ def logout():
     st.session_state.page = "Beranda"
     st.session_state.login_mode = "Masuk"
     st.session_state.show_add_task = False
+    st.session_state.message = None
 
     st.rerun()
 
@@ -165,19 +187,16 @@ def get_tasks():
 def auth_error_text(error):
 
     text = str(error)
-
     lower = text.lower()
 
     if "already registered" in lower:
         return (
-            "Email ini sudah terdaftar di Supabase. "
+            "Email ini sudah terdaftar. "
             "Coba gunakan menu Masuk."
         )
 
     if "invalid login credentials" in lower:
-        return (
-            "Email atau password salah."
-        )
+        return "Email atau password salah."
 
     if "email not confirmed" in lower:
         return (
@@ -185,14 +204,7 @@ def auth_error_text(error):
             "Cek inbox email kamu."
         )
 
-    if "password" in lower:
-        return (
-            f"Password ditolak Supabase: {text}"
-        )
-
-    return (
-        f"Supabase error: {text}"
-    )
+    return f"Supabase error: {text}"
 
 
 if (
@@ -296,15 +308,11 @@ if (
 
             if not email:
 
-                st.error(
-                    "Email belum diisi."
-                )
+                st.error("Email belum diisi.")
 
             elif not password:
 
-                st.error(
-                    "Password belum diisi."
-                )
+                st.error("Password belum diisi.")
 
             else:
 
@@ -321,13 +329,13 @@ if (
                         )
                     )
 
-                    if (
-                        result.user
-                        and result.session
-                    ):
+                    if result.user and result.session:
 
                         st.session_state.user = result.user
                         st.session_state.session = result.session
+
+                        pasang_access_token()
+
                         st.session_state.page = "Beranda"
 
                         st.rerun()
@@ -353,7 +361,6 @@ if (
         ):
 
             st.session_state.login_mode = "Daftar"
-
             st.rerun()
 
     else:
@@ -395,15 +402,11 @@ if (
 
             if not email:
 
-                st.error(
-                    "Email belum diisi."
-                )
+                st.error("Email belum diisi.")
 
             elif not password:
 
-                st.error(
-                    "Password belum diisi."
-                )
+                st.error("Password belum diisi.")
 
             elif len(password) < 6:
 
@@ -413,9 +416,7 @@ if (
 
             elif password != password_confirmation:
 
-                st.error(
-                    "Password tidak sama."
-                )
+                st.error("Password tidak sama.")
 
             else:
 
@@ -442,6 +443,9 @@ if (
 
                         st.session_state.user = result.user
                         st.session_state.session = result.session
+
+                        pasang_access_token()
+
                         st.session_state.page = "Beranda"
 
                         st.rerun()
@@ -475,10 +479,12 @@ if (
         ):
 
             st.session_state.login_mode = "Masuk"
-
             st.rerun()
 
     st.stop()
+
+
+pasang_access_token()
 
 
 st.markdown(
@@ -624,7 +630,9 @@ st.markdown(
         border-radius: 50% !important;
         width: 62px !important;
         height: 62px !important;
+        min-width: 62px !important;
         font-size: 32px !important;
+        box-shadow: 0 7px 22px rgba(136,14,79,0.30);
     }
 
     </style>
@@ -725,7 +733,6 @@ if st.session_state.page == "Beranda":
     st.markdown(
         f"""
         <div class="header-card">
-
             <div class="current-date">
                 {tanggal_indonesia(today, True)}
             </div>
@@ -741,7 +748,6 @@ if st.session_state.page == "Beranda":
             </div>
 
             <div class="stats">
-
                 <span class="completed-stat">
                     Tugas selesai: {len(completed)}
                 </span>
@@ -749,9 +755,7 @@ if st.session_state.page == "Beranda":
                 <span class="incomplete-stat">
                     Tugas belum selesai: {len(unfinished)}
                 </span>
-
             </div>
-
         </div>
         """,
         unsafe_allow_html=True
@@ -820,18 +824,12 @@ if st.session_state.page == "Beranda":
                                 {
                                     "user_id":
                                         st.session_state.user.id,
-
                                     "subject_id":
-                                        subject_names[
-                                            selected_subject
-                                        ],
-
+                                        subject_names[selected_subject],
                                     "name":
                                         task_name.strip(),
-
                                     "deadline":
                                         deadline.isoformat(),
-
                                     "done":
                                         False
                                 }
@@ -849,9 +847,7 @@ if st.session_state.page == "Beranda":
                             f"Gagal menyimpan tugas: {error}"
                         )
 
-        if st.button(
-            "Batal"
-        ):
+        if st.button("Batal"):
 
             st.session_state.show_add_task = False
             st.rerun()
@@ -882,9 +878,6 @@ if st.session_state.page == "Beranda":
     )
 
     filter_all, filter_unfinished, filter_done = st.columns(3)
-
-    if "task_filter" not in st.session_state:
-        st.session_state.task_filter = "Semua"
 
     with filter_all:
 
@@ -954,9 +947,17 @@ if st.session_state.page == "Beranda":
 
             with columns[index % 2]:
 
-                subject_name = subject_map.get(
-                    task["subject_id"],
-                    "Mata Pelajaran"
+                subject_name = html.escape(
+                    str(
+                        subject_map.get(
+                            task["subject_id"],
+                            "Mata Pelajaran"
+                        )
+                    )
+                )
+
+                task_name = html.escape(
+                    str(task["name"])
                 )
 
                 st.markdown(
@@ -968,7 +969,7 @@ if st.session_state.page == "Beranda":
                         </div>
 
                         <div class="task-text">
-                            {task["name"]}
+                            {task_name}
                         </div>
 
                         <div class="deadline-text">
@@ -1076,7 +1077,7 @@ elif st.session_state.page == "Mata Pelajaran":
         clear_on_submit=True
     ):
 
-        subject_name = st.text_input(
+        subject_name_input = st.text_input(
             "Nama Mata Pelajaran"
         )
 
@@ -1086,9 +1087,9 @@ elif st.session_state.page == "Mata Pelajaran":
 
     if add_subject:
 
-        subject_name = subject_name.strip()
+        subject_name_input = subject_name_input.strip()
 
-        if not subject_name:
+        if not subject_name_input:
 
             st.error(
                 "Nama mata pelajaran harus diisi."
@@ -1096,7 +1097,7 @@ elif st.session_state.page == "Mata Pelajaran":
 
         elif any(
             subject["name"].lower()
-            == subject_name.lower()
+            == subject_name_input.lower()
             for subject in subjects
         ):
 
@@ -1115,12 +1116,15 @@ elif st.session_state.page == "Mata Pelajaran":
                         {
                             "user_id":
                                 st.session_state.user.id,
-
                             "name":
-                                subject_name
+                                subject_name_input
                         }
                     )
                     .execute()
+                )
+
+                st.success(
+                    "Mata pelajaran berhasil ditambahkan."
                 )
 
                 st.rerun()
@@ -1151,16 +1155,18 @@ elif st.session_state.page == "Mata Pelajaran":
 
         for subject in subjects:
 
-            col1, col2 = st.columns(
-                [5, 1]
-            )
+            col1, col2 = st.columns([5, 1])
 
             with col1:
+
+                subject_name_display = html.escape(
+                    str(subject["name"])
+                )
 
                 st.markdown(
                     f"""
                     <div class="info-card">
-                        <b>{subject["name"]}</b>
+                        <b>{subject_name_display}</b>
                     </div>
                     """,
                     unsafe_allow_html=True
@@ -1256,10 +1262,14 @@ elif st.session_state.page == "Notifikasi":
 
         for task in overdue:
 
+            task_name = html.escape(
+                str(task["name"])
+            )
+
             st.markdown(
                 f"""
                 <div class="info-card">
-                    <b>{task["name"]}</b>
+                    <b>{task_name}</b>
                     <br>
                     Deadline:
                     {tanggal_indonesia(task["deadline"])}
@@ -1277,10 +1287,14 @@ elif st.session_state.page == "Notifikasi":
 
         for task in upcoming:
 
+            task_name = html.escape(
+                str(task["name"])
+            )
+
             st.markdown(
                 f"""
                 <div class="info-card">
-                    <b>{task["name"]}</b>
+                    <b>{task_name}</b>
                     <br>
                     Deadline:
                     {tanggal_indonesia(task["deadline"])}
@@ -1308,6 +1322,10 @@ elif st.session_state.page == "Akun":
         unsafe_allow_html=True
     )
 
+    user_email = html.escape(
+        str(st.session_state.user.email or "")
+    )
+
     st.markdown(
         f"""
         <div class="info-card">
@@ -1327,7 +1345,7 @@ elif st.session_state.page == "Akun":
                 font-weight:bold;
                 margin-top:8px;
             ">
-                {st.session_state.user.email}
+                {user_email}
             </div>
 
         </div>
@@ -1402,3 +1420,4 @@ elif st.session_state.page == "Pengaturan":
     ):
 
         logout()
+```
