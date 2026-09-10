@@ -1,5 +1,7 @@
-import streamlit as st
+import html
 from datetime import date, timedelta
+
+import streamlit as st
 from supabase import create_client
 
 
@@ -13,7 +15,6 @@ st.set_page_config(
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-
 
 supabase = create_client(
     SUPABASE_URL,
@@ -36,14 +37,14 @@ if "login_mode" not in st.session_state:
 if "show_add_task" not in st.session_state:
     st.session_state.show_add_task = False
 
-if "task_filter" not in st.session_state:
-    st.session_state.task_filter = "Semua"
-
 if "message" not in st.session_state:
     st.session_state.message = None
 
 if "message_type" not in st.session_state:
     st.session_state.message_type = "info"
+
+if "task_filter" not in st.session_state:
+    st.session_state.task_filter = "Semua"
 
 
 hari = [
@@ -55,7 +56,6 @@ hari = [
     "Sabtu",
     "Minggu"
 ]
-
 
 bulan = [
     "Januari",
@@ -93,23 +93,23 @@ def tanggal_indonesia(tanggal, tampilkan_hari=False):
     return hasil
 
 
+def set_message(message, message_type="info"):
+
+    st.session_state.message = message
+    st.session_state.message_type = message_type
+
+
 def pasang_access_token():
 
-    if st.session_state.session is None:
+    session = st.session_state.session
+
+    if session is None:
         return
 
     try:
-        supabase.postgrest.auth(
-            st.session_state.session.access_token
-        )
+        supabase.postgrest.auth(session.access_token)
     except Exception:
         pass
-
-
-def set_message(text, message_type="info"):
-
-    st.session_state.message = text
-    st.session_state.message_type = message_type
 
 
 def logout():
@@ -133,9 +133,7 @@ def get_subjects():
 
     try:
 
-        pasang_access_token()
-
-        result = (
+        response = (
             supabase
             .table("subjects")
             .select("id, name, created_at")
@@ -150,7 +148,7 @@ def get_subjects():
             .execute()
         )
 
-        return result.data or []
+        return response.data or []
 
     except Exception:
 
@@ -161,9 +159,7 @@ def get_tasks():
 
     try:
 
-        pasang_access_token()
-
-        result = (
+        response = (
             supabase
             .table("tasks")
             .select(
@@ -180,7 +176,7 @@ def get_tasks():
             .execute()
         )
 
-        return result.data or []
+        return response.data or []
 
     except Exception:
 
@@ -192,30 +188,22 @@ def auth_error_text(error):
     text = str(error)
     lower = text.lower()
 
+    if "already registered" in lower:
+        return (
+            "Email ini sudah terdaftar. "
+            "Coba gunakan menu Masuk."
+        )
+
     if "invalid login credentials" in lower:
         return "Email atau password salah."
 
     if "email not confirmed" in lower:
         return (
             "Email belum diverifikasi. "
-            "Silakan cek inbox email kamu."
-        )
-
-    if "already registered" in lower:
-        return (
-            "Email tersebut sudah terdaftar. "
-            "Silakan masuk."
+            "Cek inbox email kamu."
         )
 
     return f"Supabase error: {text}"
-
-
-if (
-    st.session_state.session is not None
-    and st.session_state.user is not None
-):
-
-    pasang_access_token()
 
 
 if (
@@ -228,7 +216,7 @@ if (
         <style>
 
         .stApp {
-            background-color: #fff5f8;
+            background: #fff5f8;
         }
 
         .main .block-container {
@@ -236,24 +224,67 @@ if (
             padding-top: 70px;
         }
 
+        .login-title {
+            text-align: center;
+            color: #880E4F;
+            font-family: "Times New Roman", serif;
+            font-size: 46px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: #666;
+            font-family: Georgia, serif;
+            font-size: 17px;
+            margin-bottom: 28px;
+        }
+
+        div[data-testid="stForm"] {
+            background: white;
+            border: 1px solid #f0ccd9;
+            border-radius: 20px;
+            padding: 28px;
+        }
+
+        .stButton > button {
+            border-radius: 12px;
+            border: 1px solid #dca2b9;
+            background: white;
+            color: #880E4F;
+            font-family: "Times New Roman", serif;
+            font-size: 16px;
+        }
+
+        .stButton > button:hover {
+            border-color: #880E4F;
+            background: #fff0f5;
+            color: #880E4F;
+        }
+
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    st.title("PENGINGAT TUGAS")
-
-    st.caption(
-        "Masuk untuk menyimpan tugasmu."
-        if st.session_state.login_mode == "Masuk"
-        else
-        "Buat akun baru untuk mulai mencatat tugas."
+    st.markdown(
+        '<div class="login-title">PENGINGAT TUGAS</div>',
+        unsafe_allow_html=True
     )
-
 
     if st.session_state.login_mode == "Masuk":
 
-        with st.form("login_form"):
+        st.markdown(
+            """
+            <div class="login-subtitle">
+                Masuk untuk menyimpan tugasmu.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        with st.form("form_login"):
 
             email = st.text_input(
                 "Email",
@@ -265,14 +296,16 @@ if (
                 type="password"
             )
 
-            submit = st.form_submit_button(
+            masuk = st.form_submit_button(
                 "Masuk",
                 use_container_width=True
             )
 
-        if submit:
+        if masuk:
 
-            if not email.strip():
+            email = email.strip()
+
+            if not email:
 
                 st.error("Email belum diisi.")
 
@@ -289,16 +322,16 @@ if (
                         .auth
                         .sign_in_with_password(
                             {
-                                "email": email.strip(),
+                                "email": email,
                                 "password": password
                             }
                         )
                     )
 
-                    if result.session and result.user:
+                    if result.user and result.session:
 
-                        st.session_state.session = result.session
                         st.session_state.user = result.user
+                        st.session_state.session = result.session
 
                         pasang_access_token()
 
@@ -309,7 +342,8 @@ if (
                     else:
 
                         st.error(
-                            "Login gagal. Session tidak ditemukan."
+                            "Login gagal. "
+                            "Supabase tidak memberikan session."
                         )
 
                 except Exception as error:
@@ -318,6 +352,7 @@ if (
                         auth_error_text(error)
                     )
 
+        st.write("")
 
         if st.button(
             "Belum punya akun? Daftar",
@@ -327,10 +362,18 @@ if (
             st.session_state.login_mode = "Daftar"
             st.rerun()
 
-
     else:
 
-        with st.form("register_form"):
+        st.markdown(
+            """
+            <div class="login-subtitle">
+                Buat akun baru untuk mulai mencatat tugas.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        with st.form("form_register"):
 
             email = st.text_input(
                 "Email",
@@ -342,19 +385,21 @@ if (
                 type="password"
             )
 
-            password2 = st.text_input(
+            password_confirmation = st.text_input(
                 "Ulangi Password",
                 type="password"
             )
 
-            submit = st.form_submit_button(
+            daftar = st.form_submit_button(
                 "Daftar",
                 use_container_width=True
             )
 
-        if submit:
+        if daftar:
 
-            if not email.strip():
+            email = email.strip()
+
+            if not email:
 
                 st.error("Email belum diisi.")
 
@@ -368,11 +413,9 @@ if (
                     "Password minimal 6 karakter."
                 )
 
-            elif password != password2:
+            elif password != password_confirmation:
 
-                st.error(
-                    "Password tidak sama."
-                )
+                st.error("Password tidak sama.")
 
             else:
 
@@ -383,7 +426,7 @@ if (
                         .auth
                         .sign_up(
                             {
-                                "email": email.strip(),
+                                "email": email,
                                 "password": password
                             }
                         )
@@ -392,10 +435,10 @@ if (
                     if result.user is None:
 
                         st.error(
-                            "User gagal dibuat."
+                            "Supabase tidak membuat user."
                         )
 
-                    elif result.session:
+                    elif result.session is not None:
 
                         st.session_state.user = result.user
                         st.session_state.session = result.session
@@ -414,7 +457,7 @@ if (
                             (
                                 "Akun berhasil dibuat. "
                                 "Silakan cek email untuk "
-                                "verifikasi akun."
+                                "verifikasi akun, kemudian login."
                             ),
                             "success"
                         )
@@ -427,6 +470,7 @@ if (
                         auth_error_text(error)
                     )
 
+        st.write("")
 
         if st.button(
             "Sudah punya akun? Masuk",
@@ -436,8 +480,10 @@ if (
             st.session_state.login_mode = "Masuk"
             st.rerun()
 
-
     st.stop()
+
+
+pasang_access_token()
 
 
 st.markdown(
@@ -445,65 +491,81 @@ st.markdown(
     <style>
 
     .stApp {
-        background-color: #fff5f8;
+        background: #fff5f8;
     }
 
     .main .block-container {
         max-width: 1250px;
-        padding-top: 25px;
+        padding-top: 30px;
         padding-bottom: 100px;
     }
 
-    h1 {
-        color: #880E4F !important;
-        font-family: "Times New Roman", serif !important;
+    .main-title {
+        text-align: center;
+        color: #880E4F;
+        font-family: "Times New Roman", serif;
+        font-size: 50px;
+        font-weight: bold;
+        margin-bottom: 25px;
     }
 
-    h2 {
-        color: #880E4F !important;
-        font-family: "Times New Roman", serif !important;
-    }
-
-    .hero {
+    .header-card {
         background: white;
         border: 1px solid #f2ccd9;
         border-radius: 24px;
-        padding: 30px;
-        margin-bottom: 25px;
-        box-shadow: 0 7px 25px rgba(136, 14, 79, 0.08);
+        padding: 32px 40px;
+        box-shadow: 0 8px 28px rgba(136,14,79,0.08);
+        margin-bottom: 28px;
     }
 
-    .date-text {
-        color: #666666;
+    .current-date {
+        color: #555;
         font-family: "Times New Roman", serif;
-        font-size: 18px;
+        font-size: 19px;
     }
 
-    .hero-title {
+    .greeting {
         color: #880E4F;
         font-family: "Times New Roman", serif;
         font-size: 40px;
         font-weight: bold;
-        margin-top: 8px;
+        margin-top: 7px;
     }
 
-    .hero-description {
-        color: #444444;
+    .description {
+        color: #444;
         font-family: Georgia, serif;
         font-size: 17px;
         line-height: 1.6;
         margin-top: 8px;
     }
 
-    .stat-box {
-        background: #fff7fa;
-        border: 1px solid #f2d4df;
-        border-radius: 14px;
-        padding: 14px;
-        text-align: center;
+    .stats {
+        display: flex;
+        gap: 35px;
+        margin-top: 20px;
+        font-family: "Times New Roman", serif;
+        font-size: 17px;
     }
 
-    .task-box {
+    .completed-stat {
+        color: #39764d;
+    }
+
+    .incomplete-stat {
+        color: #880E4F;
+    }
+
+    .section-title {
+        color: #880E4F;
+        font-family: "Times New Roman", serif;
+        font-size: 28px;
+        font-weight: bold;
+        margin-top: 25px;
+        margin-bottom: 15px;
+    }
+
+    .task-card {
         background: white;
         border: 1px solid #f1d5df;
         border-radius: 18px;
@@ -512,46 +574,64 @@ st.markdown(
         box-shadow: 0 5px 18px rgba(136,14,79,0.07);
     }
 
-    .task-subject {
-        color: #777777;
+    .subject-text {
+        color: #666;
         font-family: "Times New Roman", serif;
         font-size: 16px;
     }
 
-    .task-name {
-        color: #222222;
+    .task-text {
+        color: #222;
         font-family: "Times New Roman", serif;
         font-size: 22px;
         font-weight: bold;
-        margin-top: 4px;
+        margin-top: 3px;
     }
 
-    .task-deadline {
-        color: #777777;
+    .deadline-text {
+        color: #777;
         font-family: "Times New Roman", serif;
         font-size: 15px;
         margin-top: 6px;
     }
 
-    .info-box {
+    .empty-box {
+        background: white;
+        border: 1px dashed #dfa7bc;
+        border-radius: 20px;
+        padding: 45px 20px;
+        text-align: center;
+        color: #777;
+        font-family: "Times New Roman", serif;
+        font-size: 18px;
+    }
+
+    .page-title {
+        color: #880E4F;
+        font-family: "Times New Roman", serif;
+        font-size: 34px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .info-card {
         background: white;
         border: 1px solid #f1d0dc;
-        border-radius: 18px;
-        padding: 20px;
-        margin-bottom: 15px;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 16px;
     }
 
-    .stButton > button {
-        border-radius: 12px;
-        border: 1px solid #dca2b9;
-        color: #880E4F;
-        background: white;
-    }
-
-    .stButton > button:hover {
-        border-color: #880E4F;
-        color: #880E4F;
-        background: #fff1f6;
+    .add-button button {
+        background: #880E4F !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 50% !important;
+        width: 62px !important;
+        height: 62px !important;
+        min-width: 62px !important;
+        font-size: 32px !important;
+        box-shadow: 0 7px 22px rgba(136,14,79,0.30);
     }
 
     </style>
@@ -560,70 +640,66 @@ st.markdown(
 )
 
 
-menu = st.popover("☰")
+def navigation():
 
-with menu:
+    menu = st.popover("☰")
 
-    if st.button(
-        "Beranda",
-        use_container_width=True
-    ):
+    with menu:
 
-        st.session_state.page = "Beranda"
-        st.rerun()
+        if st.button(
+            "Beranda",
+            use_container_width=True
+        ):
 
-    if st.button(
-        "Mata Pelajaran",
-        use_container_width=True
-    ):
+            st.session_state.page = "Beranda"
+            st.rerun()
 
-        st.session_state.page = "Mata Pelajaran"
-        st.rerun()
+        if st.button(
+            "Mata Pelajaran",
+            use_container_width=True
+        ):
 
-    if st.button(
-        "Notifikasi",
-        use_container_width=True
-    ):
+            st.session_state.page = "Mata Pelajaran"
+            st.rerun()
 
-        st.session_state.page = "Notifikasi"
-        st.rerun()
+        if st.button(
+            "Notifikasi",
+            use_container_width=True
+        ):
 
-    if st.button(
-        "Akun",
-        use_container_width=True
-    ):
+            st.session_state.page = "Notifikasi"
+            st.rerun()
 
-        st.session_state.page = "Akun"
-        st.rerun()
+        if st.button(
+            "Akun",
+            use_container_width=True
+        ):
 
-    if st.button(
-        "Pengaturan",
-        use_container_width=True
-    ):
+            st.session_state.page = "Akun"
+            st.rerun()
 
-        st.session_state.page = "Pengaturan"
-        st.rerun()
+        if st.button(
+            "Pengaturan",
+            use_container_width=True
+        ):
+
+            st.session_state.page = "Pengaturan"
+            st.rerun()
+
+
+navigation()
 
 
 if st.session_state.message:
 
     if st.session_state.message_type == "success":
-
-        st.success(
-            st.session_state.message
-        )
+        st.success(st.session_state.message)
 
     elif st.session_state.message_type == "error":
-
-        st.error(
-            st.session_state.message
-        )
+        st.error(st.session_state.message)
 
     else:
-
-        st.info(
-            st.session_state.message
-        )
+        st.info(st.session_state.message)
 
     st.session_state.message = None
 
@@ -634,7 +710,10 @@ tasks = get_tasks()
 
 if st.session_state.page == "Beranda":
 
-    st.title("PENGINGAT TUGAS")
+    st.markdown(
+        '<div class="main-title">PENGINGAT TUGAS</div>',
+        unsafe_allow_html=True
+    )
 
     today = date.today()
 
@@ -650,85 +729,54 @@ if st.session_state.page == "Beranda":
         if task.get("done") is not True
     ]
 
-
     st.markdown(
-        '<div class="hero">',
+        f"""
+        <div class="header-card">
+            <div class="current-date">
+                {tanggal_indonesia(today, True)}
+            </div>
+
+            <div class="greeting">
+                Satu - satu, selesai
+            </div>
+
+            <div class="description">
+                Catat yang perlu dikerjakan.
+                Biar kepala lebih lega dan deadline terasa
+                lebih dekat untuk ditaklukan.
+            </div>
+
+            <div class="stats">
+                <span class="completed-stat">
+                    Tugas selesai: {len(completed)}
+                </span>
+
+                <span class="incomplete-stat">
+                    Tugas belum selesai: {len(unfinished)}
+                </span>
+            </div>
+        </div>
+        """,
         unsafe_allow_html=True
     )
-
-    st.markdown(
-        f'<p class="date-text">{tanggal_indonesia(today, True)}</p>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        "### Satu - satu, selesai"
-    )
-
-    st.write(
-        "Catat yang perlu dikerjakan. "
-        "Biar kepala lebih lega dan deadline terasa "
-        "lebih dekat untuk ditaklukan."
-    )
-
-    stat1, stat2 = st.columns(2)
-
-    with stat1:
-
-        st.markdown(
-            '<div class="stat-box">',
-            unsafe_allow_html=True
-        )
-
-        st.write("Tugas selesai")
-
-        st.subheader(
-            str(len(completed))
-        )
-
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
-
-    with stat2:
-
-        st.markdown(
-            '<div class="stat-box">',
-            unsafe_allow_html=True
-        )
-
-        st.write("Tugas belum selesai")
-
-        st.subheader(
-            str(len(unfinished))
-        )
-
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
-
-    st.markdown(
-        '</div>',
-        unsafe_allow_html=True
-    )
-
 
     if st.session_state.show_add_task:
 
-        st.subheader("Tambah Tugas")
+        st.markdown(
+            '<div class="section-title">Tambah Tugas</div>',
+            unsafe_allow_html=True
+        )
 
         if not subjects:
 
-            st.info(
-                "Tambahkan mata pelajaran terlebih dahulu "
-                "melalui menu Mata Pelajaran."
+            st.warning(
+                "Belum ada mata pelajaran. "
+                "Tambahkan mata pelajaran terlebih dahulu."
             )
 
         else:
 
-            subject_options = {
+            subject_names = {
                 subject["name"]: subject["id"]
                 for subject in subjects
             }
@@ -740,7 +788,7 @@ if st.session_state.page == "Beranda":
 
                 selected_subject = st.selectbox(
                     "Mata Pelajaran",
-                    list(subject_options.keys())
+                    list(subject_names.keys())
                 )
 
                 task_name = st.text_input(
@@ -752,12 +800,11 @@ if st.session_state.page == "Beranda":
                     value=date.today()
                 )
 
-                save = st.form_submit_button(
-                    "Simpan Tugas",
-                    use_container_width=True
+                save_task = st.form_submit_button(
+                    "Simpan Tugas"
                 )
 
-            if save:
+            if save_task:
 
                 if not task_name.strip():
 
@@ -769,8 +816,6 @@ if st.session_state.page == "Beranda":
 
                     try:
 
-                        pasang_access_token()
-
                         (
                             supabase
                             .table("tasks")
@@ -778,18 +823,12 @@ if st.session_state.page == "Beranda":
                                 {
                                     "user_id":
                                         st.session_state.user.id,
-
                                     "subject_id":
-                                        subject_options[
-                                            selected_subject
-                                        ],
-
+                                        subject_names[selected_subject],
                                     "name":
                                         task_name.strip(),
-
                                     "deadline":
                                         deadline.isoformat(),
-
                                     "done":
                                         False
                                 }
@@ -807,7 +846,6 @@ if st.session_state.page == "Beranda":
                             f"Gagal menyimpan tugas: {error}"
                         )
 
-
         if st.button("Batal"):
 
             st.session_state.show_add_task = False
@@ -815,22 +853,32 @@ if st.session_state.page == "Beranda":
 
     else:
 
+        st.markdown(
+            '<div class="add-button">',
+            unsafe_allow_html=True
+        )
+
         if st.button(
-            "＋ Tambah Tugas",
-            key="add_task"
+            "+",
+            key="add_task_button"
         ):
 
             st.session_state.show_add_task = True
             st.rerun()
 
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
 
-    st.subheader("DAFTAR TUGAS")
+    st.markdown(
+        '<div class="section-title">DAFTAR TUGAS</div>',
+        unsafe_allow_html=True
+    )
 
+    filter_all, filter_unfinished, filter_done = st.columns(3)
 
-    col_all, col_unfinished, col_done = st.columns(3)
-
-
-    with col_all:
+    with filter_all:
 
         if st.button(
             f"Semua ({len(tasks)})",
@@ -840,8 +888,7 @@ if st.session_state.page == "Beranda":
             st.session_state.task_filter = "Semua"
             st.rerun()
 
-
-    with col_unfinished:
+    with filter_unfinished:
 
         if st.button(
             f"Belum selesai ({len(unfinished)})",
@@ -851,8 +898,7 @@ if st.session_state.page == "Beranda":
             st.session_state.task_filter = "Belum selesai"
             st.rerun()
 
-
-    with col_done:
+    with filter_done:
 
         if st.button(
             f"Sudah selesai ({len(completed)})",
@@ -861,7 +907,6 @@ if st.session_state.page == "Beranda":
 
             st.session_state.task_filter = "Sudah selesai"
             st.rerun()
-
 
     if st.session_state.task_filter == "Semua":
 
@@ -875,18 +920,22 @@ if st.session_state.page == "Beranda":
 
         visible_tasks = completed
 
-
     subject_map = {
         subject["id"]: subject["name"]
         for subject in subjects
     }
 
-
     if not visible_tasks:
 
-        st.info(
-            "Belum ada tugas. "
-            "Tekan tombol Tambah Tugas untuk membuat tugas."
+        st.markdown(
+            """
+            <div class="empty-box">
+                Belum ada tugas.
+                <br>
+                Tekan tombol + untuk menambahkan tugas.
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
     else:
@@ -897,49 +946,55 @@ if st.session_state.page == "Beranda":
 
             with columns[index % 2]:
 
-                st.markdown(
-                    '<div class="task-box">',
-                    unsafe_allow_html=True
+                subject_name = html.escape(
+                    str(
+                        subject_map.get(
+                            task["subject_id"],
+                            "Mata Pelajaran"
+                        )
+                    )
+                )
+
+                task_name = html.escape(
+                    str(task["name"])
                 )
 
                 st.markdown(
-                    f'<div class="task-subject">{subject_map.get(task["subject_id"], "Mata Pelajaran")}</div>',
+                    f"""
+                    <div class="task-card">
+
+                        <div class="subject-text">
+                            {subject_name}
+                        </div>
+
+                        <div class="task-text">
+                            {task_name}
+                        </div>
+
+                        <div class="deadline-text">
+                            Tenggat:
+                            {tanggal_indonesia(task["deadline"])}
+                        </div>
+
+                    </div>
+                    """,
                     unsafe_allow_html=True
                 )
 
-                st.markdown(
-                    f'<div class="task-name">{task["name"]}</div>',
-                    unsafe_allow_html=True
-                )
-
-                st.markdown(
-                    f'<div class="task-deadline">Tenggat: {tanggal_indonesia(task["deadline"])}</div>',
-                    unsafe_allow_html=True
-                )
-
-                st.markdown(
-                    '</div>',
-                    unsafe_allow_html=True
-                )
-
-
-                old_done = task.get(
+                current_done = task.get(
                     "done",
                     False
                 )
 
                 new_done = st.checkbox(
                     "Tandai selesai",
-                    value=old_done,
+                    value=current_done,
                     key=f"done_{task['id']}"
                 )
 
-
-                if new_done != old_done:
+                if new_done != current_done:
 
                     try:
-
-                        pasang_access_token()
 
                         (
                             supabase
@@ -968,15 +1023,12 @@ if st.session_state.page == "Beranda":
                             f"Gagal mengubah status: {error}"
                         )
 
-
                 if st.button(
                     "Hapus tugas",
-                    key=f"delete_task_{task['id']}"
+                    key=f"delete_{task['id']}"
                 ):
 
                     try:
-
-                        pasang_access_token()
 
                         (
                             supabase
@@ -1004,34 +1056,39 @@ if st.session_state.page == "Beranda":
 
 elif st.session_state.page == "Mata Pelajaran":
 
-    st.title("Mata Pelajaran")
-
-    st.info(
-        "Tambahkan mata pelajaran yang ingin kamu gunakan "
-        "saat membuat tugas."
+    st.markdown(
+        '<div class="page-title">Mata Pelajaran</div>',
+        unsafe_allow_html=True
     )
 
+    st.markdown(
+        """
+        <div class="info-card">
+            Tambahkan mata pelajaran yang kamu gunakan.
+            Mata pelajaran akan muncul saat menambahkan tugas.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     with st.form(
         "subject_form",
         clear_on_submit=True
     ):
 
-        subject_name = st.text_input(
+        subject_name_input = st.text_input(
             "Nama Mata Pelajaran"
         )
 
         add_subject = st.form_submit_button(
-            "Tambah Mata Pelajaran",
-            use_container_width=True
+            "Tambah Mata Pelajaran"
         )
-
 
     if add_subject:
 
-        subject_name = subject_name.strip()
+        subject_name_input = subject_name_input.strip()
 
-        if not subject_name:
+        if not subject_name_input:
 
             st.error(
                 "Nama mata pelajaran harus diisi."
@@ -1039,7 +1096,7 @@ elif st.session_state.page == "Mata Pelajaran":
 
         elif any(
             subject["name"].lower()
-            == subject_name.lower()
+            == subject_name_input.lower()
             for subject in subjects
         ):
 
@@ -1051,8 +1108,6 @@ elif st.session_state.page == "Mata Pelajaran":
 
             try:
 
-                pasang_access_token()
-
                 (
                     supabase
                     .table("subjects")
@@ -1060,17 +1115,15 @@ elif st.session_state.page == "Mata Pelajaran":
                         {
                             "user_id":
                                 st.session_state.user.id,
-
                             "name":
-                                subject_name
+                                subject_name_input
                         }
                     )
                     .execute()
                 )
 
-                set_message(
-                    "Mata pelajaran berhasil ditambahkan.",
-                    "success"
+                st.success(
+                    "Mata pelajaran berhasil ditambahkan."
                 )
 
                 st.rerun()
@@ -1081,30 +1134,40 @@ elif st.session_state.page == "Mata Pelajaran":
                     f"Gagal menambahkan mata pelajaran: {error}"
                 )
 
-
-    st.subheader(
-        "Daftar Mata Pelajaran"
+    st.markdown(
+        '<div class="section-title">Daftar Mata Pelajaran</div>',
+        unsafe_allow_html=True
     )
-
 
     if not subjects:
 
-        st.info(
-            "Belum ada mata pelajaran."
+        st.markdown(
+            """
+            <div class="empty-box">
+                Belum ada mata pelajaran.
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
     else:
 
         for subject in subjects:
 
-            col1, col2 = st.columns(
-                [5, 1]
-            )
+            col1, col2 = st.columns([5, 1])
 
             with col1:
 
+                subject_name_display = html.escape(
+                    str(subject["name"])
+                )
+
                 st.markdown(
-                    f'<div class="info-box"><b>{subject["name"]}</b></div>',
+                    f"""
+                    <div class="info-card">
+                        <b>{subject_name_display}</b>
+                    </div>
+                    """,
                     unsafe_allow_html=True
                 )
 
@@ -1132,8 +1195,6 @@ elif st.session_state.page == "Mata Pelajaran":
 
                         try:
 
-                            pasang_access_token()
-
                             (
                                 supabase
                                 .table("subjects")
@@ -1160,14 +1221,17 @@ elif st.session_state.page == "Mata Pelajaran":
 
 elif st.session_state.page == "Notifikasi":
 
-    st.title("Notifikasi")
+    st.markdown(
+        '<div class="page-title">Notifikasi</div>',
+        unsafe_allow_html=True
+    )
 
     today = date.today()
 
     unfinished = [
         task
         for task in tasks
-        if task.get("done") is not True
+        if not task.get("done", False)
     ]
 
     overdue = [
@@ -1188,58 +1252,132 @@ elif st.session_state.page == "Notifikasi":
         <= today + timedelta(days=2)
     ]
 
-
     if overdue:
 
-        st.subheader("Tugas Terlewat")
+        st.markdown(
+            '<div class="section-title">Tugas Terlewat</div>',
+            unsafe_allow_html=True
+        )
 
         for task in overdue:
 
-            st.warning(
-                f"{task['name']} — deadline "
-                f"{tanggal_indonesia(task['deadline'])}"
+            task_name = html.escape(
+                str(task["name"])
             )
 
+            st.markdown(
+                f"""
+                <div class="info-card">
+                    <b>{task_name}</b>
+                    <br>
+                    Deadline:
+                    {tanggal_indonesia(task["deadline"])}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     if upcoming:
 
-        st.subheader("Deadline Terdekat")
+        st.markdown(
+            '<div class="section-title">Deadline Terdekat</div>',
+            unsafe_allow_html=True
+        )
 
         for task in upcoming:
 
-            st.info(
-                f"{task['name']} — deadline "
-                f"{tanggal_indonesia(task['deadline'])}"
+            task_name = html.escape(
+                str(task["name"])
             )
 
+            st.markdown(
+                f"""
+                <div class="info-card">
+                    <b>{task_name}</b>
+                    <br>
+                    Deadline:
+                    {tanggal_indonesia(task["deadline"])}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     if not overdue and not upcoming:
 
-        st.success(
-            "Tidak ada notifikasi saat ini. ✨"
+        st.markdown(
+            """
+            <div class="empty-box">
+                Tidak ada notifikasi saat ini. ✨
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
 
 elif st.session_state.page == "Akun":
 
-    st.title("Akun")
-
-    st.subheader("Informasi Akun")
-
-    st.write("Email")
-
-    st.info(
-        st.session_state.user.email
+    st.markdown(
+        '<div class="page-title">Akun</div>',
+        unsafe_allow_html=True
     )
 
-    st.write("Total Tugas")
-
-    st.metric(
-        label="Jumlah tugas",
-        value=len(tasks)
+    user_email = html.escape(
+        str(st.session_state.user.email or "")
     )
 
-    st.write("")
+    st.markdown(
+        f"""
+        <div class="info-card">
+
+            <div style="
+                color:#666;
+                font-family:Georgia,serif;
+                font-size:16px;
+            ">
+                Email
+            </div>
+
+            <div style="
+                color:#880E4F;
+                font-family:'Times New Roman',serif;
+                font-size:25px;
+                font-weight:bold;
+                margin-top:8px;
+            ">
+                {user_email}
+            </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        f"""
+        <div class="info-card">
+
+            <div style="
+                color:#666;
+                font-family:Georgia,serif;
+                font-size:16px;
+            ">
+                Total Tugas
+            </div>
+
+            <div style="
+                color:#880E4F;
+                font-family:'Times New Roman',serif;
+                font-size:30px;
+                font-weight:bold;
+                margin-top:8px;
+            ">
+                {len(tasks)}
+            </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     if st.button(
         "Keluar",
@@ -1251,25 +1389,29 @@ elif st.session_state.page == "Akun":
 
 elif st.session_state.page == "Pengaturan":
 
-    st.title("Pengaturan")
-
-    st.subheader("Tampilan")
-
-    st.write(
-        "Pengingat Tugas menggunakan tampilan "
-        "terang dengan nuansa pink."
+    st.markdown(
+        '<div class="page-title">Pengaturan</div>',
+        unsafe_allow_html=True
     )
 
-    st.divider()
+    st.markdown(
+        """
+        <div class="info-card">
+            <b>Tampilan</b>
+            <br>
+            Pengingat Tugas menggunakan tampilan
+            terang dengan nuansa pink.
+        </div>
 
-    st.subheader("Penyimpanan")
-
-    st.write(
-        "Tugas dan mata pelajaran tersimpan "
-        "di Supabase berdasarkan akun pengguna."
+        <div class="info-card">
+            <b>Penyimpanan</b>
+            <br>
+            Tugas dan mata pelajaran tersimpan
+            di Supabase berdasarkan akun pengguna.
+        </div>
+        """,
+        unsafe_allow_html=True
     )
-
-    st.divider()
 
     if st.button(
         "Keluar dari akun",
