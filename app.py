@@ -9,8 +9,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-SUPABASE_URL = st.secrets["https://oypxtlswcdyljzhywupa.supabase.co"]
-SUPABASE_KEY = st.secrets["sb_publishable_ml_CbVe56y589GsudrSwHg_djtrj75T"]
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 supabase = create_client(
     SUPABASE_URL,
