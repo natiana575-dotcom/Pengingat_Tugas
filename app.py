@@ -810,5 +810,68 @@ if st.session_state.page == "Beranda":
                     task["deadline"]
                 )
 
-                st.markdown(
-                    f'<div class="task-card"><div style="display:flex; gap:16px; align-items:center;"><div class="book-icon"><svg viewBox="0 0 64 64"><path d="M9 12 C20 9 30 13 32 18 L32 55 C28 50 18 48 9 51 Z" fill="#c2185b"/><path d="M55 12 C44 9 34 13 32 18 L32 55 C36 50 46 48 55 51 Z" fill="#ad1457"/><path d="M32 18 L32 55" stroke="#f8bbd0" stroke-width="3"/><path d="M15 20 C21 19 26 21 29 23" stroke="white" stroke-width="2" fill="none"/><path d="M49 20 C43 19 38 21 35 23"
+               st.markdown(
+                    f"""
+                    <div class="task-card">
+                        <div style="display:flex; gap:16px; align-items:center;">
+                            <div class="book-icon">
+                                <svg viewBox="0 0 64 64">
+                                    <path d="M9 12 C20 9 30 13 32 18 L32 55 C28 50 18 48 9 51 Z" fill="#c2185b"/>
+                                    <path d="M55 12 C44 9 34 13 32 18 L32 55 C36 50 46 48 55 51 Z" fill="#ad1457"/>
+                                    <path d="M32 18 L32 55" stroke="#f8bbd0" stroke-width="3"/>
+                                    <path d="M15 20 C21 19 26 21 29 23" stroke="white" stroke-width="2" fill="none"/>
+                                    <path d="M49 20 C43 19 38 21 35 23" stroke="white" stroke-width="2" fill="none"/>
+                                </svg>
+                            </div>
+
+                            <div style="flex:1;">
+                                <div class="subject">{subject_safe}</div>
+                                <div class="task-name">{name_safe}</div>
+                                <div class="deadline">Tenggat: {deadline_text}</div>
+                            </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                checked = st.checkbox(
+                    "Tandai selesai",
+                    value=task.get("done", False),
+                    key=f"check_{task['id']}"
+                )
+
+                if checked != task.get("done", False):
+                    try:
+                        supabase.table("task").update({
+                            "done": checked
+                        }).eq(
+                            "id", task["id"]
+                        ).eq(
+                            "user_id", user.id
+                        ).execute()
+
+                        load_data()
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error("Status tugas gagal diperbarui.")
+                        st.caption(str(e))
+
+                if st.button(
+                    "Hapus tugas",
+                    key=f"delete_{task['id']}"
+                ):
+                    try:
+                        supabase.table("task").delete().eq(
+                            "id", task["id"]
+                        ).eq(
+                            "user_id", user.id
+                        ).execute()
+
+                        load_data()
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error("Tugas gagal dihapus.")
+                        st.caption(str(e))
