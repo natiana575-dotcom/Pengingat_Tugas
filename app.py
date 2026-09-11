@@ -1137,11 +1137,7 @@ elif st.session_state.page == "Mata Pelajaran":
                 )
 
                 st.markdown(
-                    dedent(f"""
-                    <div class="info-card">
-                        <b>{subject_name_display}</b>
-                    </div>
-                    """),
+                    dedent(f"""<div class="info-card"><b>{subject_name_display}</b></div>"""),
                     unsafe_allow_html=True
                 )
 
@@ -1300,56 +1296,12 @@ elif st.session_state.page == "Akun":
     )
 
     st.markdown(
-        dedent(f"""
-        <div class="info-card">
-
-            <div style="
-                color:#666;
-                font-family:Georgia,serif;
-                font-size:16px;
-            ">
-                Email
-            </div>
-
-            <div style="
-                color:#880E4F;
-                font-family:'Times New Roman',serif;
-                font-size:25px;
-                font-weight:bold;
-                margin-top:8px;
-            ">
-                {user_email}
-            </div>
-
-        </div>
-        """),
+        dedent(f"""<div class="info-card"><div style="color:#666;font-family:Georgia,serif;font-size:16px;">Email</div><div style="color:#880E4F;font-family:'Times New Roman',serif;font-size:25px;font-weight:bold;margin-top:8px;">{user_email}</div></div>"""),
         unsafe_allow_html=True
     )
 
     st.markdown(
-        dedent(f"""
-        <div class="info-card">
-
-            <div style="
-                color:#666;
-                font-family:Georgia,serif;
-                font-size:16px;
-            ">
-                Total Tugas
-            </div>
-
-            <div style="
-                color:#880E4F;
-                font-family:'Times New Roman',serif;
-                font-size:30px;
-                font-weight:bold;
-                margin-top:8px;
-            ">
-                {len(tasks)}
-            </div>
-
-        </div>
-        """),
+        dedent(f"""<div class="info-card"><div style="color:#666;font-family:Georgia,serif;font-size:16px;">Total Tugas</div><div style="color:#880E4F;font-family:'Times New Roman',serif;font-size:30px;font-weight:bold;margin-top:8px;">{len(tasks)}</div></div>"""),
         unsafe_allow_html=True
     )
 
@@ -1371,12 +1323,12 @@ elif st.session_state.page == "Pengaturan":
     st.markdown(
         dedent("""
         <div class="info-card">
-            <b>Tampilan</b>
-            <br>
-            Pengingat Tugas menggunakan tampilan
-            terang dengan nuansa pink.
+        <b>Tampilan</b>
+        <br>
+        Pengingat Tugas menggunakan tampilan
+        terang dengan nuansa pink.
         </div>
-
+        
         <div class="info-card">
             <b>Penyimpanan</b>
             <br>
