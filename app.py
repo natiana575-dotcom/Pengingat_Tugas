@@ -732,7 +732,7 @@ if st.session_state.page == "Beranda":
 
     st.markdown(
         dedent(f"""<div class="header-card"><div class="current-date">{tanggal_indonesia(today, True)}
-            </div><div class="greeting">Satu - satu, selesai/div><div class="description">Catat yang perlu dikerjakan. Biar kepala lebih lega dan deadline terasa lebih dekat untuk ditaklukan.</div><div class="stats"><span class="completed-stat">Tugas selesai: {len(completed)}</span><span class="incomplete-stat">Tugas belum selesai: {len(unfinished)}</span></div></div>"""),
+            </div><div class="greeting">Satu - satu, selesai<div class="description">Catat yang perlu dikerjakan. Biar kepala lebih lega dan deadline terasa lebih dekat untuk ditaklukan.</div><div class="stats"><span class="completed-stat">Tugas selesai: {len(completed)}</span><span class="incomplete-stat">Tugas belum selesai: {len(unfinished)}</span></div></div>"""),
         unsafe_allow_html=True
     )
 
