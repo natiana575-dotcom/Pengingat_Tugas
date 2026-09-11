@@ -921,12 +921,7 @@ if st.session_state.page == "Beranda":
             with columns[index % 2]:
 
                 subject_name = html.escape(
-                    str(
-                        subject_map.get(
-                            task["subject_id"],
-                            "Mata Pelajaran"
-                        )
-                    )
+                    str(subject_map.get(task["subject_id"],"Mata Pelajaran"))
                 )
 
                 task_name = html.escape(
