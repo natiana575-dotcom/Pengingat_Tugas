@@ -575,6 +575,48 @@ st.markdown(
         box-shadow: 0 5px 18px rgba(136,14,79,0.07);
     }
 
+    .task-card-wrapper {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .task-card-content {
+        flex: 1;
+    }
+
+    .expand-button {
+        width: 48px;
+        min-width: 48px;
+    }
+
+    .material-card {
+        background: #fff;
+        border: 1px solid #f1d5df;
+        border-radius: 14px;
+        padding: 16px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        box-shadow: 0 4px 14px rgba(136,14,79,0.06);
+    }
+
+    .material-title {
+        color: #880E4F;
+        font-family: "Times New Roman", serif;
+        font-size: 17px;
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .material-link {
+        color: #666;
+        font-family: Georgia, serif;
+        font-size: 14px;
+        word-break: break-all;
+        line-height: 1.5;
+    }
+
     .subject-text {
         color: #666;
         font-family: "Times New Roman", serif;
@@ -931,20 +973,29 @@ if st.session_state.page == "Beranda":
                 if f"expanded_{task['id']}" not in st.session_state:
                     st.session_state[f"expanded_{task['id']}"] = False
                 
-                st.markdown(
-    dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
-    unsafe_allow_html=True
-                )
-            
-                if task.get("link"):
-                    expand_key = f"expanded_{task['id']}"
+                card_col, button_col = st.columns([10, 1])
 
-                    if st.button(
-                        "﹀" if not st.session_state[expand_key] else "︿",
-                        key=f"expand_{task['id']}"
-                    ):
-                        st.session_state[expand_key] = not st.session_state[expand_key]
-                        st.rerun()
+with card_col:
+
+    st.markdown(
+        dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
+        unsafe_allow_html=True
+    )
+
+with button_col:
+
+    if task.get("link"):
+
+        if st.button(
+            "﹀" if not st.session_state[expand_key] else "︿",
+            key=f"expand_{task['id']}"
+        ):
+
+            st.session_state[expand_key] = (
+                not st.session_state[expand_key]
+            )
+
+            st.rerun()
 
                     if st.session_state[expand_key]:
                         st.markdown(
