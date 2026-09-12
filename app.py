@@ -980,42 +980,38 @@ if st.session_state.page == "Beranda":
                         dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
                         unsafe_allow_html=True
                     )
-
-with button_col:
-
-    if task.get("link"):
-
-        if st.button(
-            "﹀" if not st.session_state[expand_key] else "︿",
-            key=f"expand_{task['id']}"
-        ):
-
-            st.session_state[expand_key] = (
-                not st.session_state[expand_key]
-            )
-
-            st.rerun()
-
-if st.session_state[expand_key]:
-    st.markdown(
-        f"""<div class="material-card"><div class="material-title">Materi / Link</div><div class="material-link">{html.escape(task["link"])}</div></div>""",
-        unsafe_allow_html=True
-    )
-    st.link_button(
-        "Buka materi →",
-        task["link"]
-    )
-    
-    current_done = task.get(
-        "done",
-        False
-    )
-
-                new_done = st.checkbox(
-                    "Tandai selesai",
-                    value=current_done,
-                    key=f"done_{task['id']}"
-                )
+                    with button_col:
+                        if task.get("link"):
+                            if st.button(
+                                "﹀" if not st.session_state[expand_key] else "︿",
+                                key=f"expand_{task['id']}"
+                            ):
+                                
+                                st.session_state[expand_key] = (
+                                    not st.session_state[expand_key]
+                                )
+                                
+                                st.rerun()
+                                
+                                if st.session_state[expand_key]:
+                                    st.markdown(
+                                        f"""<div class="material-card"><div class="material-title">Materi / Link</div><div class="material-link">{html.escape(task["link"])}</div></div>""",
+                                        unsafe_allow_html=True
+                                    )
+                                    st.link_button(
+                                        "Buka materi →",
+                                        task["link"]
+                                    )
+                                    current_done = task.get(
+                                        "done",
+                                        False
+                                    )
+                                    
+                                    new_done = st.checkbox(
+                                        "Tandai selesai",
+                                        value=current_done,
+                                        key=f"done_{task['id']}"
+                                    )
 
                 if new_done != current_done:
 
