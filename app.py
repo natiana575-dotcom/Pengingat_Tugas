@@ -976,10 +976,10 @@ if st.session_state.page == "Beranda":
                 card_col, button_col = st.columns([10, 1])
                 with card_col:
                     
-    st.markdown(
-        dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
-        unsafe_allow_html=True
-    )
+                    st.markdown(
+                        dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
+                        unsafe_allow_html=True
+                    )
 
 with button_col:
 
