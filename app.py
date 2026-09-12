@@ -664,14 +664,6 @@ def navigation():
             st.rerun()
 
         if st.button(
-            "Notifikasi",
-            use_container_width=True
-        ):
-
-            st.session_state.page = "Notifikasi"
-            st.rerun()
-
-        if st.button(
             "Akun",
             use_container_width=True
         ):
