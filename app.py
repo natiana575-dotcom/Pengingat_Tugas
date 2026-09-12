@@ -906,6 +906,196 @@ if st.session_state.page == "Beranda":
 
     else:
 
+        columns = st.columns(2)
+
+        for index, task in enumerate(visible_tasks):
+
+            with columns[index % 2]:
+
+                subject_name = html.escape(
+                    str(subject_map.get(task["subject_id"],"Mata Pelajaran"))
+                )
+
+                task_name = html.escape(
+                    str(task["name"])
+                )
+
+                st.markdown(
+                    dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
+                    unsafe_allow_html=True
+                )
+
+                current_done = task.get(
+                    "done",
+                    False
+                )
+
+                new_done = st.checkbox(
+                    "Tandai selesai",
+                    value=current_done,
+                    key=f"done_{task['id']}"
+                )
+
+                if new_done != current_done:
+
+                    try:
+
+                        (
+                            supabase
+                            .table("tasks")
+                            .update(
+                                {
+                                    "done": new_done
+                                }
+                            )
+                            .eq(
+                                "id",
+                                task["id"]
+                            )
+                            .eq(
+                                "user_id",
+                                st.session_state.user.id
+                            )
+                            .execute()
+                        )
+
+                        st.rerun()
+
+                    except Exception as error:
+
+                        st.error(
+                            f"Gagal mengubah status: {error}"
+                        )
+
+                if st.button(
+                    "Hapus tugas",
+                    key=f"delete_{task['id']}"
+                ):
+
+                    try:
+
+                        (
+                            supabase
+                            .table("tasks")
+                            .delete()
+                            .eq(
+                                "id",
+                                task["id"]
+                            )
+                            .eq(
+                                "user_id",
+                                st.session_state.user.id
+                            )
+                            .execute()
+                        )
+
+                        st.rerun()
+
+                    except Exception as error:
+
+                        st.error(
+                            f"Gagal menghapus tugas: {error}"
+                        )
+
+
+elif st.session_state.page == "Mata Pelajaran":
+
+    st.markdown(
+        '<div class="page-title">Mata Pelajaran</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        dedent("""
+        <div class="info-card">
+            Tambahkan mata pelajaran yang kamu gunakan.
+            Mata pelajaran akan muncul saat menambahkan tugas.
+        </div>
+        """),
+        unsafe_allow_html=True
+    )
+
+    with st.form(
+        "subject_form",
+        clear_on_submit=True
+    ):
+
+        subject_name_input = st.text_input(
+            "Nama Mata Pelajaran"
+        )
+
+        add_subject = st.form_submit_button(
+            "Tambah Mata Pelajaran"
+        )
+
+    if add_subject:
+
+        subject_name_input = subject_name_input.strip()
+
+        if not subject_name_input:
+
+            st.error(
+                "Nama mata pelajaran harus diisi."
+            )
+
+        elif any(
+            subject["name"].lower()
+            == subject_name_input.lower()
+            for subject in subjects
+        ):
+
+            st.warning(
+                "Mata pelajaran tersebut sudah ada."
+            )
+
+        else:
+
+            try:
+
+                (
+                    supabase
+                    .table("subjects")
+                    .insert(
+                        {
+                            "user_id":
+                                st.session_state.user.id,
+                            "name":
+                                subject_name_input
+                        }
+                    )
+                    .execute()
+                )
+
+                st.success(
+                    "Mata pelajaran berhasil ditambahkan."
+                )
+
+                st.rerun()
+
+            except Exception as error:
+
+                st.error(
+                    f"Gagal menambahkan mata pelajaran: {error}"
+                )
+
+    st.markdown(
+        '<div class="section-title">Daftar Mata Pelajaran</div>',
+        unsafe_allow_html=True
+    )
+
+    if not subjects:
+
+        st.markdown(
+            dedent("""
+            <div class="empty-box">
+                Belum ada mata pelajaran.
+            </div>
+            """),
+            unsafe_allow_html=True
+        )
+
+    else:
+
         for subject in subjects:
 
             col1, col2 = st.columns([5, 1])
@@ -1027,4 +1217,5 @@ elif st.session_state.page == "Pengaturan":
         "Keluar dari akun",
         use_container_width=True
     ):
+
         logout()
