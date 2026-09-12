@@ -1019,28 +1019,27 @@ if st.session_state.page == "Beranda":
                                     key=f"delete_{task['id']}"
                                 ):
                                     try:
-                                    (supabase
-                                     .table("tasks")
-                                     .delete()
-                                     .eq(
-                                         "id",
-                                         task["id"]
-                                     )
-                                     .eq(
-                                         "user_id",
-                                         st.session_state.user.id
-                                     )
-                                     .execute()
-                                    )
-                                    st.rerun()
-
-except Exception as error:
-st.error(
-    f"Gagal menghapus tugas: {error}"
-)
-
+                                        (supabase
+                                         .table("tasks")
+                                         .delete()
+                                         .eq(
+                                             "id",
+                                             task["id"]
+                                         )
+                                         .eq(
+                                             "user_id",
+                                             st.session_state.user.id
+                                         )
+                                         .execute()
+                                        )
+                                        st.rerun()
+                                    
+                                    except Exception as error:
+                                        st.error(
+                                            f"Gagal menghapus tugas: {error}"
+                                        )
+                                
 elif st.session_state.page == "Mata Pelajaran":
-
     st.markdown(
         '<div class="page-title">Mata Pelajaran</div>',
         unsafe_allow_html=True
