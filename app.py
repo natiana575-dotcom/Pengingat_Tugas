@@ -1007,42 +1007,42 @@ if st.session_state.page == "Beranda":
                                         False
                                     )
                                     
-                                    new_done = st.checkbox(
+                                                                        new_done = st.checkbox(
                                         "Tandai selesai",
                                         value=current_done,
                                         key=f"done_{task['id']}"
                                     )
 
-                if new_done != current_done:
+                                    if new_done != current_done:
 
-                    try:
+                                        try:
 
-                        (
-                            supabase
-                            .table("tasks")
-                            .update(
-                                {
-                                    "done": new_done
-                                }
-                            )
-                            .eq(
-                                "id",
-                                task["id"]
-                            )
-                            .eq(
-                                "user_id",
-                                st.session_state.user.id
-                            )
-                            .execute()
-                        )
+                                            (
+                                                supabase
+                                                .table("tasks")
+                                                .update(
+                                                    {
+                                                        "done": new_done
+                                                    }
+                                                )
+                                                .eq(
+                                                    "id",
+                                                    task["id"]
+                                                )
+                                                .eq(
+                                                    "user_id",
+                                                    st.session_state.user.id
+                                                )
+                                                .execute()
+                                            )
 
-                        st.rerun()
+                                            st.rerun()
 
-                    except Exception as error:
+                                        except Exception as error:
 
-                        st.error(
-                            f"Gagal mengubah status: {error}"
-                        )
+                                            st.error(
+                                                f"Gagal mengubah status: {error}"
+                                            )
 
                 if st.button(
                     "Hapus tugas",
