@@ -935,14 +935,14 @@ if st.session_state.page == "Beranda":
     dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
     unsafe_allow_html=True
                 )
-
-                if task.get("link"):
-    if st.button(
-        "﹀" if not st.session_state[f"expanded_{task['id']}"] else "︿",
-        key=f"expand_{task['id']}"
-    ):
-        st.session_state[f"expanded_{task['id']}"] = not st.session_state[f"expanded_{task['id']}"]
-        st.rerun()
+            
+if task.get("link"):
+if st.button(
+"﹀" if not st.session_state[f"expanded_{task['id']}"] else "︿",
+key=f"expand_{task['id']}"
+):
+    st.session_state[f"expanded_{task['id']}"] = not st.session_state[f"expanded_{task['id']}"]
+    st.rerun()
 
 if task.get("link") and st.session_state[f"expanded_{task['id']}"]:
 
