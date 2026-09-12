@@ -38,6 +38,12 @@ if "login_mode" not in st.session_state:
 if "show_add_task" not in st.session_state:
     st.session_state.show_add_task = False
 
+if "message" not in st.session_state:
+    st.session_state.message = None
+
+if "message_type" not in st.session_state:
+    st.session_state.message_type = "info"
+
 if "task_filter" not in st.session_state:
     st.session_state.task_filter = "Semua"
 
