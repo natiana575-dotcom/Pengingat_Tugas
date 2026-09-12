@@ -936,24 +936,27 @@ if st.session_state.page == "Beranda":
     unsafe_allow_html=True
                 )
             
-if task.get("link"):
-    if st.button("﹀" if not st.session_state[f"expanded_{task['id']}"] else "︿",key=f"expand_{task['id']}"
-):
-    st.session_state[f"expanded_{task['id']}"] = not st.session_state[f"expanded_{task['id']}"]
-    st.rerun()
+                if task.get("link"):
+                    expand_key = f"expanded_{task['id']}"
 
-if task.get("link") and st.session_state[f"expanded_{task['id']}"]:
+                    if st.button(
+                        "﹀" if not st.session_state[expand_key] else "︿",
+                        key=f"expand_{task['id']}"
+                    ):
+                        st.session_state[expand_key] = not st.session_state[expand_key]
+                        st.rerun()
 
-    st.markdown(
-        f"""<div class="material-card"><div class="material-title">Materi / Link</div><div class="material-link">{html.escape(task["link"])}</div></div>""",
-        unsafe_allow_html=True
-    )
+                    if st.session_state[expand_key]:
+                        st.markdown(
+                            f"""<div class="material-card"><div class="material-title">Materi / Link</div><div class="material-link">{html.escape(task["link"])}</div></div>""",
+                            unsafe_allow_html=True
+                        )
 
-    st.link_button(
-        "Buka materi →",
-        task["link"]
-    )
-                
+                        st.link_button(
+                            "Buka materi →",
+                            task["link"]
+                        )
+                        
                 current_done = task.get(
                     "done",
                     False
