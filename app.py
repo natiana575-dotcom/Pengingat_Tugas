@@ -974,9 +974,8 @@ if st.session_state.page == "Beranda":
                     st.session_state[f"expanded_{task['id']}"] = False
                 
                 card_col, button_col = st.columns([10, 1])
-
-with card_col:
-
+                with card_col:
+                    
     st.markdown(
         dedent(f"""<div class="task-card"><div class="subject-text">{subject_name}</div><div class="task-text">{task_name}</div><div class="deadline-text">Tenggat:{tanggal_indonesia(task["deadline"])}</div></div>"""),
         unsafe_allow_html=True
@@ -997,21 +996,20 @@ with button_col:
 
             st.rerun()
 
-                    if st.session_state[expand_key]:
-                        st.markdown(
-                            f"""<div class="material-card"><div class="material-title">Materi / Link</div><div class="material-link">{html.escape(task["link"])}</div></div>""",
-                            unsafe_allow_html=True
-                        )
-
-                        st.link_button(
-                            "Buka materi →",
-                            task["link"]
-                        )
-                        
-                current_done = task.get(
-                    "done",
-                    False
-                )
+if st.session_state[expand_key]:
+    st.markdown(
+        f"""<div class="material-card"><div class="material-title">Materi / Link</div><div class="material-link">{html.escape(task["link"])}</div></div>""",
+        unsafe_allow_html=True
+    )
+    st.link_button(
+        "Buka materi →",
+        task["link"]
+    )
+    
+    current_done = task.get(
+        "done",
+        False
+    )
 
                 new_done = st.checkbox(
                     "Tandai selesai",
