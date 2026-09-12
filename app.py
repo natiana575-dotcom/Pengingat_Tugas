@@ -1018,7 +1018,7 @@ if st.session_state.page == "Beranda":
                                     "Hapus tugas",
                                     key=f"delete_{task['id']}"
                                 ):
-                                    try
+                                    try:
                                     (supabase
                                      .table("tasks")
                                      .delete()
@@ -1090,9 +1090,7 @@ elif st.session_state.page == "Mata Pelajaran":
             )
 
         else:
-
             try:
-
                 (
                     supabase
                     .table("subjects")
