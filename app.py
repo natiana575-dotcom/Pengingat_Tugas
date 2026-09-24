@@ -704,7 +704,7 @@ tasks = get_tasks()
 if st.session_state.page == "Beranda":
 
     st.markdown(
-        '<div class="main-title">PENGINGAT TUGAS</div>',
+        '<div class="main-title">PENCATAT TUGAS</div>',
         unsafe_allow_html=True
     )
 
@@ -1199,7 +1199,7 @@ elif st.session_state.page == "Pengaturan":
         <div class="info-card">
         <b>Tampilan</b>
         <br>
-        Pengingat Tugas menggunakan tampilan
+        Pencatat Tugas menggunakan tampilan
         terang dengan nuansa pink.
         </div>
         
