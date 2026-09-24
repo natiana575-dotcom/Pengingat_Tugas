@@ -7,7 +7,7 @@ from supabase import create_client
 
 
 st.set_page_config(
-    page_title="Pengingat Tugas",
+    page_title="Pencatat Tugas",
     page_icon="📖",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -270,7 +270,7 @@ if (
     )
 
     st.markdown(
-        '<div class="login-title">PENGINGAT TUGAS</div>',
+        '<div class="login-title">PENCATAT TUGAS</div>',
         unsafe_allow_html=True
     )
 
